@@ -1,0 +1,234 @@
+import java.util.*;
+
+class Cargo {
+    int id;
+    String date;
+    String status;
+    int deliveryTime;
+
+    public Cargo(int id, String date, String status, int deliveryTime) {
+        this.id = id;
+        this.date = date;
+        this.status = status;
+        this.deliveryTime = deliveryTime;
+    }
+
+    @Override
+    public String toString() {
+        return "Cargo ID: " + id + ", Date: " + date + ", Status: " + status + ", Delivery Time: " + deliveryTime + " days";
+    }
+}
+
+class Customer {
+    int id;
+    String name;
+    String surname;
+    LinkedList<Cargo> cargoHistory;
+
+    public Customer(int id, String name, String surname) {
+        this.id = id;
+        this.name = name;
+        this.surname = surname;
+        this.cargoHistory = new LinkedList<>();
+    }
+
+    public void addCargo(Cargo cargo) {
+        int index = 0;
+        while (index < cargoHistory.size() && cargoHistory.get(index).date.compareTo(cargo.date) < 0) {
+            index++;
+        }
+        cargoHistory.add(index, cargo);
+    }
+
+    @Override
+    public String toString() {
+        return "Customer ID: " + id + ", Name: " + name + " " + surname;
+    }
+}
+
+class PriorityQueueCargo {
+    private PriorityQueue<Cargo> priorityQueue;
+
+    public PriorityQueueCargo() {
+        priorityQueue = new PriorityQueue<>(Comparator.comparingInt(c -> c.deliveryTime));
+    }
+
+    public void addCargo(Cargo cargo) {
+        priorityQueue.add(cargo);
+    }
+
+    public Cargo processNextCargo() {
+        return priorityQueue.poll();
+    }
+
+    public boolean isEmpty() {
+        return priorityQueue.isEmpty();
+    }
+}
+
+class DeliveryTreeNode {
+    String cityName;
+    int cityId;
+    List<DeliveryTreeNode> children;
+
+    public DeliveryTreeNode(String cityName, int cityId) {
+        this.cityName = cityName;
+        this.cityId = cityId;
+        this.children = new ArrayList<>();
+    }
+
+    public void addChild(DeliveryTreeNode child) {
+        children.add(child);
+    }
+}
+
+class DeliveryTree {
+    DeliveryTreeNode root;
+
+    public DeliveryTree(String centralOffice) {
+        root = new DeliveryTreeNode(centralOffice, 0);
+    }
+
+    public void printTree(DeliveryTreeNode node, String indent) {
+        if (node == null) return;
+        System.out.println(indent + node.cityName + " (ID: " + node.cityId + ")");
+        for (DeliveryTreeNode child : node.children) {
+            printTree(child, indent + "  ");
+        }
+    }
+
+    public void display() {
+        printTree(root, "");
+    }
+}
+
+class RecentCargoStack {
+    private Stack<Cargo> stack;
+
+    public RecentCargoStack() {
+        stack = new Stack<>();
+    }
+
+    public void pushCargo(Cargo cargo) {
+        stack.push(cargo);
+    }
+
+    public void showRecentCargos() {
+        if (stack.isEmpty()) {
+            System.out.println("No recent cargos available.");
+            return;
+        }
+        int count = 0;
+        for (Cargo cargo : stack) {
+            if (count == 5) break;
+            System.out.println(cargo);
+            count++;
+        }
+    }
+}
+
+public class CargoManagementSystem {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Example usage
+        LinkedList<Customer> customers = new LinkedList<>();
+        PriorityQueueCargo priorityQueue = new PriorityQueueCargo();
+        RecentCargoStack recentCargoStack = new RecentCargoStack();
+        DeliveryTree deliveryTree = new DeliveryTree("Central Office");
+
+        // Example: Adding a customer
+        Customer customer1 = new Customer(1, "Ali", "Yılmaz");
+        customers.add(customer1);
+
+        // Example: Adding cargo to a customer
+        Cargo cargo1 = new Cargo(101, "2024-12-15", "Delivered", 3);
+        Cargo cargo2 = new Cargo(102, "2024-12-16", "In Transit", 1);
+        customer1.addCargo(cargo1);
+        customer1.addCargo(cargo2);
+
+        // Example: Using priority queue for cargos
+        priorityQueue.addCargo(cargo1);
+        priorityQueue.addCargo(cargo2);
+
+        // Example: Using stack for recent cargos
+        recentCargoStack.pushCargo(cargo1);
+        recentCargoStack.pushCargo(cargo2);
+
+        // Example: Building a delivery tree
+        DeliveryTreeNode city1 = new DeliveryTreeNode("Istanbul", 1);
+        DeliveryTreeNode city2 = new DeliveryTreeNode("Ankara", 2);
+        deliveryTree.root.addChild(city1);
+        deliveryTree.root.addChild(city2);
+
+        // Menu example
+        while (true) {
+            System.out.println("\nCargo Management System:");
+            System.out.println("1. Add Customer");
+            System.out.println("2. Add Cargo to Customer");
+            System.out.println("3. View Delivery Tree");
+            System.out.println("4. Process Next Priority Cargo");
+            System.out.println("5. Show Recent Cargos");
+            System.out.println("6. Exit");
+            System.out.print("Choose an option: ");
+
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter Customer ID: ");
+                    int id = scanner.nextInt();
+                    scanner.nextLine();
+                    System.out.print("Enter Name: ");
+                    String name = scanner.nextLine();
+                    System.out.print("Enter Surname: ");
+                    String surname = scanner.nextLine();
+                    customers.add(new Customer(id, name, surname));
+                    break;
+                case 2:
+                    System.out.print("Enter Customer ID: ");
+                    int customerId = scanner.nextInt();
+                    scanner.nextLine();
+                    System.out.print("Enter Cargo ID: ");
+                    int cargoId = scanner.nextInt();
+                    scanner.nextLine();
+                    System.out.print("Enter Cargo Date: ");
+                    String date = scanner.nextLine();
+                    System.out.print("Enter Cargo Status: ");
+                    String status = scanner.nextLine();
+                    System.out.print("Enter Delivery Time: ");
+                    int deliveryTime = scanner.nextInt();
+                    scanner.nextLine();
+                    for (Customer customer : customers) {
+                        if (customer.id == customerId) {
+                            Cargo newCargo = new Cargo(cargoId, date, status, deliveryTime);
+                            customer.addCargo(newCargo);
+                            priorityQueue.addCargo(newCargo);
+                            recentCargoStack.pushCargo(newCargo);
+                            System.out.println("Cargo added successfully.");
+                        }
+                    }
+                    break;
+                case 3:
+                    deliveryTree.display();
+                    break;
+                case 4:
+                    if (!priorityQueue.isEmpty()) {
+                        System.out.println("Processing: " + priorityQueue.processNextCargo());
+                    } else {
+                        System.out.println("No cargos to process.");
+                    }
+                    break;
+                case 5:
+                    recentCargoStack.showRecentCargos();
+                    break;
+                case 6:
+                    System.out.println("Exiting system.");
+                    return;
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        }
+    }
+}
